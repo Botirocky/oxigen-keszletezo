@@ -1,0 +1,39 @@
+# ============================================================================
+# BOLTI ADATOK – EZEK SOHA NEM MEHETNEK FEL
+# ============================================================================
+# az adatbázis maga (a bolt éles készlete és árai)
+keszlet.xlsx
+keszlet_teszt.xlsx
+*.xlsx
+*.xls
+*.csv
+
+# admin jelszó-hash + dolgozók névsora + helyi útvonalak
+config.json
+
+# a napi munkamenet állapota
+napi_munkamenet.json
+
+# az Excel automatikus biztonsági mentései
+backup/
+
+# ============================================================================
+# generált és helyi holmi
+# ============================================================================
+__pycache__/
+*.py[cod]
+build/
+dist/
+.venv-build/
+.venv/
+*.zip
+graphify-out/
+managed_context/
+test_suite_analysis/
+.claude/
+
+# ============================================================================
+# nagy fájlok, amik a futáshoz nem kellenek
+# ============================================================================
+demo_funkciok.mp4
+logó/
