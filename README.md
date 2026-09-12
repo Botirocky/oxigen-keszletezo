@@ -255,10 +255,17 @@ történik, automatikusan **visszaáll** az előző állapot a friss mentésből
 
 ### Beállítás (egyszer, neked)
 
-A frissítés **GitHub-kiadásokból** (Releases) dolgozik. Add meg a tárolót az
-Admin → ⬆ Frissítés → **Tároló beállítása** gombbal, `tulajdonos/tároló`
-alakban – ez a `config.json` `update_repo` kulcsába kerül. Privát tárolóhoz
-tehetsz egy GitHub tokent az `update_token` kulcsba.
+A frissítés **GitHub-kiadásokból** (Releases) dolgozik, és alapból a hivatalos
+tárolóra néz:
+
+> https://github.com/Botirocky/oxigen-keszletezo
+
+Ehhez **nem kell semmit beállítani** – egy friss telepítés is azonnal kapja a
+frissítéseket. Ha másik tárolót használnál, az Admin → ⬆ Frissítés → **Tároló
+beállítása** gombbal adhatod meg (`tulajdonos/tároló` alakban); ez a
+`config.json` `update_repo` kulcsába kerül. Ha ezt **üresre** állítod, a
+frissítés kikapcsol. Privát tárolóhoz tehetsz GitHub tokent az `update_token`
+kulcsba.
 
 Parancssorból is megnézhető:
 

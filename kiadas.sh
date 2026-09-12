@@ -129,8 +129,10 @@ fi
 if command -v gh >/dev/null 2>&1; then
     if [[ -d .git ]]; then
         git add -A && git commit -qm "v${UJ}" || true
-        git tag -f "v${UJ}" >/dev/null
-        git push -q --follow-tags 2>/dev/null || echo "${SARGA}!${V} a git push nem sikerült"
+        # ANNOTÁLT címke kell: a könnyű címkét a --follow-tags nem tolja fel.
+        git tag -fa "v${UJ}" -m "v${UJ}" >/dev/null
+        git push -q origin HEAD 2>/dev/null || echo "${SARGA}!${V} a git push nem sikerült"
+        git push -qf origin "v${UJ}" 2>/dev/null || echo "${SARGA}!${V} a címke feltöltése nem sikerült"
     fi
     gh release create "v${UJ}" "$ZIP" --title "v${UJ}" --notes "$LEIRAS" \
         && ok "GitHub-kiadás létrehozva: v${UJ}" \

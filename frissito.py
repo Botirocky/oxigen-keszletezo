@@ -42,7 +42,7 @@ from datetime import datetime
 from pathlib import Path
 
 # A program verziója. EZ az egyetlen hiteles hely – a kiadas.sh is ezt írja át.
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.1.1"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
@@ -54,6 +54,11 @@ else:
 CONFIG_FILE = DATA_DIR / "config.json"
 BACKUP_DIR = DATA_DIR / "backup"
 UPDATE_LOG = BACKUP_DIR / "frissitesek.log"
+
+# Ha a config.json-ban nincs megadva tároló, ezt használjuk. Így egy friss
+# telepítés (a kiadásból kicsomagolt program) is azonnal kap frissítéseket,
+# anélkül hogy a boltban bárkinek be kellene állítania bármit.
+ALAP_REPO = "Botirocky/oxigen-keszletezo"
 
 API_ROOT = "https://api.github.com"
 USER_AGENT = f"OxigenKeszletezo/{APP_VERSION}"
@@ -110,9 +115,13 @@ def parse_version(text) -> tuple[int, ...]:
     return tuple(int(n) for n in _VER_RE.findall(head)) or ()
 
 
-def is_newer(remote, local=APP_VERSION) -> bool:
-    """Újabb-e a `remote` verzió a `local`-nál? (hiányzó tagok = 0)"""
-    a, b = parse_version(remote), parse_version(local)
+def is_newer(remote, local=None) -> bool:
+    """Újabb-e a `remote` verzió a `local`-nál? (hiányzó tagok = 0)
+
+    A `local` alapértelmezése futásidőben dől el (nem a függvény
+    definiálásakor), így teszteléskor az APP_VERSION átállítható.
+    """
+    a, b = parse_version(remote), parse_version(local or APP_VERSION)
     if not a:
         return False
     n = max(len(a), len(b))
@@ -144,8 +153,16 @@ def _update_config(**changes) -> None:
 
 
 def get_repo() -> str:
-    """A frissítési forrás („tulajdonos/tároló”), üres sztring = kikapcsolva."""
-    return str(_load_config().get("update_repo") or "").strip().strip("/")
+    """A frissítési forrás („tulajdonos/tároló”).
+
+    Ha a config.json nem rendelkezik róla, az ALAP_REPO lép életbe. Üres
+    sztringet csak akkor ad vissza, ha a config kifejezetten üresre állítja
+    (ezzel lehet a frissítést kikapcsolni).
+    """
+    cfg = _load_config()
+    if "update_repo" in cfg:
+        return str(cfg.get("update_repo") or "").strip().strip("/")
+    return ALAP_REPO
 
 
 def set_repo(repo: str) -> None:
