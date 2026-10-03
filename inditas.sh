@@ -28,7 +28,19 @@ if ! "$PY" -c "import tkinter" >/dev/null 2>&1; then
 fi
 
 # 3) openpyxl telepítése, ha hiányzik
-"$PY" -c "import openpyxl" 2>/dev/null || "$PY" -m pip install -r requirements.txt
+if ! "$PY" -c "import openpyxl" 2>/dev/null; then
+    if ! "$PY" -m pip install --user -r requirements.txt; then
+        echo "HIBA: az openpyxl nem települt. Telepítsd a rendszer csomagkezelőjével:" >&2
+        if command -v pacman >/dev/null 2>&1; then
+            echo "    sudo pacman -S python-openpyxl" >&2
+        elif command -v apt >/dev/null 2>&1; then
+            echo "    sudo apt install python3-openpyxl" >&2
+        elif command -v dnf >/dev/null 2>&1; then
+            echo "    sudo dnf install python3-openpyxl" >&2
+        fi
+        exit 1
+    fi
+fi
 
 # 4) indítás
 exec "$PY" keszlet_app.py

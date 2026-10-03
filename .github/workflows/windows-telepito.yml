@@ -1,0 +1,97 @@
+name: Windows telepítő
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Függőségek
+        run: python -m pip install --upgrade pip -r requirements.txt pyinstaller
+
+      - name: Verzió
+        id: ver
+        run: |
+          $v = python -c "import re;print(re.search(r'^APP_VERSION = \"(.+)\"', open('frissito.py', encoding='utf-8').read(), re.M).group(1))"
+          if ("${{ github.event_name }}" -eq "release") {
+            $tag = "${{ github.event.release.tag_name }}".TrimStart("v", "V")
+            if ($tag -ne $v) { throw "A tag ($tag) és a frissito.py APP_VERSION ($v) eltér." }
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Verzióinformáció az exe-hez
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          $t = ($v.Split(".") + @("0")) -join ", "
+          @"
+          VSVersionInfo(
+            ffi=FixedFileInfo(filevers=($t), prodvers=($t)),
+            kids=[
+              StringFileInfo([StringTable('040e04b0', [
+                StringStruct('CompanyName', 'Botirocky'),
+                StringStruct('FileDescription', 'Oxigén készletező'),
+                StringStruct('FileVersion', '$v'),
+                StringStruct('InternalName', 'Oxigen_keszletezo'),
+                StringStruct('LegalCopyright', '© Botirocky'),
+                StringStruct('OriginalFilename', 'Oxigen_keszletezo.exe'),
+                StringStruct('ProductName', 'Oxigén készletező'),
+                StringStruct('ProductVersion', '$v')])]),
+              VarFileInfo([VarStruct('Translation', [1038, 1200])])
+            ]
+          )
+          "@ | Set-Content -Encoding utf8 verzio_info.txt
+
+      - name: Exe építése
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name Oxigen_keszletezo `
+            --add-data "assets;assets" `
+            --icon assets\app_icon.ico `
+            --version-file verzio_info.txt `
+            keszlet_app.py
+
+      - name: Frissítő-csomag (zip)
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          New-Item -ItemType Directory -Force csomag\Oxigen_keszletezo | Out-Null
+          Copy-Item dist\Oxigen_keszletezo.exe csomag\Oxigen_keszletezo\
+          Compress-Archive -Path csomag\Oxigen_keszletezo -DestinationPath "dist\Oxigen_keszletezo_windows_v$v.zip" -Force
+
+      - name: Inno Setup
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" windows\telepito.iss
+          if ($LASTEXITCODE -ne 0) { throw "Az Inno Setup hibával állt le." }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxigen-windows-${{ steps.ver.outputs.version }}
+          path: |
+            dist/Oxigen_keszletezo_telepito_v*.exe
+            dist/Oxigen_keszletezo_windows_v*.zip
+
+      - name: Feltöltés a kiadáshoz
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = "${{ steps.ver.outputs.version }}"
+          gh release upload "${{ github.event.release.tag_name }}" `
+            "dist\Oxigen_keszletezo_telepito_v$v.exe" `
+            "dist\Oxigen_keszletezo_windows_v$v.zip" --clobber

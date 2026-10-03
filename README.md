@@ -76,41 +76,23 @@ napi kassza mellé, papíron vagy archívumba).
 
 ## Telepítés
 
-Két módon telepítheted az appot – válaszd, ami a helyzetedhez illik.
+| Rendszer | Útmutató |
+|----------|----------|
+| **Windows**: telepítő (`.exe`), Python nélkül | **[docs/TELEPITES_WINDOWS.md](docs/TELEPITES_WINDOWS.md)** |
+| **Linux**: Arch és Debian, forrásból | **[docs/TELEPITES_LINUX.md](docs/TELEPITES_LINUX.md)** |
 
-### A) Önálló `.exe` készítése (ajánlott a bolti gépre)
+A Windows-telepítő a
+[kiadások oldaláról](https://github.com/Botirocky/oxigen-keszletezo/releases/latest)
+tölthető le: `Oxigen_keszletezo_telepito_vX.Y.Z.exe`. Minden kiadásnál a GitHub
+Actions építi magától (`.github/workflows/windows-telepito.yml`).
 
-Így a bolti gépre **nem kell Python**, csak egy kész program.
+Telepített Windows-változatnál a bolti adatok (`keszlet.xlsx`, `config.json`,
+`backup/`) a **`Dokumentumok\Oxigén készletező\`** mappában vannak. A
+forrásból futó és a telepítés nélküli `.exe`-s változat továbbra is a saját
+mappájában tartja őket.
 
-1. A **fejlesztői gépen** (ahol van Python) dupla kattintás az **`epites.bat`**
-   fájlra (Linux/macOS: `./epites.sh`).
-2. A szkript **mindent letölt és beállít automatikusan**: frissíti a `pip`-et,
-   telepíti a szükséges csomagokat (`openpyxl`) **és a `PyInstaller`-t**, majd
-   egyetlen önálló programot épít.
-3. Ha kész, az elkészült program a **`dist`** mappában lesz:
-   `dist\Oxigen_keszletezo.exe` (a `keszlet.xlsx` is odakerül mellé).
-4. **Telepítés a bolti gépre:** másold át a `dist` mappa **teljes tartalmát** a
-   bolti gépre (pl. az Asztalra). Indítás: dupla kattintás az
-   `Oxigen_keszletezo.exe`-re. A `keszlet.xlsx`-et az exe mellett szerkesztheted.
-
-> A `epites.bat`-ot elég **egyszer** lefuttatni. Csak akkor kell újra, ha a
-> program kódja változott és új `.exe`-t szeretnél.
-
-### B) Futtatás Pythonból (forrásból)
-
-Ha a gépen van Python, közvetlenül is futtathatod:
-
-- **Windows:** dupla kattintás az **`inditas.bat`** fájlra. Az első indításkor
-  automatikusan telepíti a szükséges `openpyxl` csomagot.
-- **Linux/macOS:** `./inditas.sh`
-- **Bármilyen rendszeren, parancssorból:**
-
-```bat
-python keszlet_app.py
-```
-
-(Ehhez a `pip install -r requirements.txt` paranccsal telepítsd egyszer a
-függőséget – ezt az indító szkriptek maguktól megteszik.)
+Fejlesztőknek: kézi exe-építés az `epites.bat` / `epites.sh`, futtatás
+forrásból az `inditas.bat` / `inditas.sh`.
 
 ---
 
@@ -245,7 +227,7 @@ az admin felületen jelenik meg.
 Telepítéskor a program:
 
 1. letölti az új csomagot,
-2. **ellenőrzi** (van-e benne épkézláb, hibátlan `keszlet_app.py`),
+2. **ellenőrzi** (van-e benne épkézláb, hibátlan `keszlet_app.py`, telepített Windows-változatnál épkézláb `.exe`),
 3. a `backup/` mappába lementi mindazt, amit felül fog írni,
 4. kicseréli a program fájljait, és újraindul.
 
@@ -287,6 +269,12 @@ A script felemeli a verziószámot, ellenőrzi hogy a program fordul-e,
 összecsomagolja, **kihagyja belőle a bolti adatokat** (`keszlet.xlsx`,
 `config.json`), és `gh`-val fel is tölti GitHub-kiadásként. A bolti gép a
 következő indításkor meglátja.
+
+A kiadás után a GitHub Actions pár perc alatt elkészíti és a kiadáshoz csatolja
+a **Windows-telepítőt** (`..._telepito_vX.Y.Z.exe`) és a telepített változat
+frissítő-csomagját (`..._windows_vX.Y.Z.zip`). A telepített Windows-program
+csak ez utóbbi megjelenése után kínálja fel a frissítést. A forrásból futó
+változat a sima zipet használja.
 
 ## Fontos tudnivalók
 
@@ -348,6 +336,9 @@ Bekapcsolva egy indigó **DEV-sáv** jelenik meg a fejléc alatt, ezekkel:
 | `config.json`    | az Excel elérési útja, a dolgozók névsora, az admin jelszó hash-e és a frissítési forrás |
 | `frissito.py`    | az automatikus frissítés (GitHub-kiadásokból); önállóan is futtatható |
 | `kiadas.sh`      | új verzió kiadása: verzióemelés + csomagolás + GitHub-kiadás |
+| `windows/telepito.iss` | a Windows-telepítő (Inno Setup) leírása |
+| `.github/workflows/windows-telepito.yml` | minden kiadásnál felépíti a Windows-exe-t és a telepítőt |
+| `docs/`          | telepítési útmutatók (Windows, Linux) |
 
 > **Megjegyzés:** a korábbi, SQLite-alapú változat fájljait (`main.py`,
 > `database.py`, `dialogs.py`, `scanner.py`, `inventory.db`) eltávolítottuk –

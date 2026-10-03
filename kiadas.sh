@@ -138,6 +138,7 @@ if command -v gh >/dev/null 2>&1; then
         && ok "GitHub-kiadás létrehozva: v${UJ}" \
         || hiba "a gh release nem sikerült"
     echo
+    echo "  A Windows-telepítőt a GitHub Actions pár perc alatt csatolja a kiadáshoz."
     echo "  A bolti gép a következő indításkor meglátja az új verziót."
 else
     echo

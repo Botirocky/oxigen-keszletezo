@@ -1,0 +1,2 @@
+Ezt a fajlt a Windows-telepito tette ide. Ne torold: ebbol tudja a program,
+hogy az adatait a Dokumentumok\Oxigén készletező mappaban tartsa.

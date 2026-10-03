@@ -60,9 +60,36 @@ except Exception:                         # a kassza frissítő nélkül is műk
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+INSTALL_MARKER = "telepitett.txt"
+INSTALLED_DATA_NAME = "Oxigén készletező"
+
+
+def _installed_data_dir(exe_dir: Path) -> Path:
+    if os.name != "nt" or not (exe_dir / INSTALL_MARKER).exists():
+        return exe_dir
+    docs = None
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(1024)
+        if ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf) == 0 and buf.value:
+            docs = Path(buf.value)
+    except Exception:
+        docs = None
+    for base in (docs, Path.home() / "Documents"):
+        if base is None:
+            continue
+        target = base / INSTALLED_DATA_NAME
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+            return target
+        except OSError:
+            continue
+    return exe_dir
+
+
 if getattr(sys, "frozen", False):
     RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", SCRIPT_DIR))
-    DATA_DIR = Path(sys.executable).resolve().parent
+    DATA_DIR = _installed_data_dir(Path(sys.executable).resolve().parent)
 else:
     RESOURCE_DIR = SCRIPT_DIR
     DATA_DIR = SCRIPT_DIR

@@ -46,8 +46,35 @@ APP_VERSION = "1.1.1"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+INSTALL_MARKER = "telepitett.txt"
+INSTALLED_DATA_NAME = "Oxigén készletező"
+
+
+def _installed_data_dir(exe_dir: Path) -> Path:
+    if os.name != "nt" or not (exe_dir / INSTALL_MARKER).exists():
+        return exe_dir
+    docs = None
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(1024)
+        if ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf) == 0 and buf.value:
+            docs = Path(buf.value)
+    except Exception:
+        docs = None
+    for base in (docs, Path.home() / "Documents"):
+        if base is None:
+            continue
+        target = base / INSTALLED_DATA_NAME
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+            return target
+        except OSError:
+            continue
+    return exe_dir
+
+
 if getattr(sys, "frozen", False):
-    DATA_DIR = Path(sys.executable).resolve().parent
+    DATA_DIR = _installed_data_dir(Path(sys.executable).resolve().parent)
 else:
     DATA_DIR = SCRIPT_DIR
 
@@ -237,9 +264,12 @@ def check(repo: str | None = None, timeout: int = CHECK_TIMEOUT) -> UpdateInfo |
     published = str(data.get("published_at") or "")[:10]
     token = get_token()
 
+    want_binary = bool(getattr(sys, "frozen", False))
     for asset in data.get("assets") or []:
         name = str(asset.get("name") or "")
         if not name.lower().endswith(".zip"):
+            continue
+        if ("windows" in name.lower()) != want_binary:
             continue
         # Privát tárolónál az API-s URL-t kell használni, tokennel.
         if token and asset.get("url"):
@@ -250,6 +280,8 @@ def check(repo: str | None = None, timeout: int = CHECK_TIMEOUT) -> UpdateInfo |
             return UpdateInfo(tag.lstrip("vV"), tag, notes, dl, name,
                               int(asset.get("size") or 0), published, api)
 
+    if want_binary:
+        return None
     zipball = str(data.get("zipball_url") or "")
     if not zipball:
         raise UpdateError("A kiadáshoz nincs letölthető .zip csatolva.")
@@ -350,6 +382,12 @@ def _find_root(extracted: Path) -> Path:
 
 def _validate(src: Path) -> None:
     """A letöltött program épségének ellenőrzése telepítés ELŐTT."""
+    if getattr(sys, "frozen", False):
+        exes = [p for p in src.rglob("*.exe") if p.is_file()]
+        if os.name == "nt" and not any(p.stat().st_size > 2_000_000 for p in exes):
+            raise UpdateError("A letöltött csomagban nincs épkézláb program "
+                              "(.exe) – a telepítés megszakadt (a program érintetlen).")
+        return
     main_py = src / "keszlet_app.py"
     try:
         code = main_py.read_text(encoding="utf-8")
