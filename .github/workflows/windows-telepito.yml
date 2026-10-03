@@ -15,9 +15,9 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -27,7 +27,8 @@ jobs:
       - name: Verzió
         id: ver
         run: |
-          $v = python -c "import re;print(re.search(r'^APP_VERSION = \"(.+)\"', open('frissito.py', encoding='utf-8').read(), re.M).group(1))"
+          $v = (python -c "import frissito; print(frissito.APP_VERSION)").Trim()
+          if (-not $v) { throw "Nem sikerült kiolvasni az APP_VERSION-t." }
           if ("${{ github.event_name }}" -eq "release") {
             $tag = "${{ github.event.release.tag_name }}".TrimStart("v", "V")
             if ($tag -ne $v) { throw "A tag ($tag) és a frissito.py APP_VERSION ($v) eltér." }
@@ -79,7 +80,7 @@ jobs:
           & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" windows\telepito.iss
           if ($LASTEXITCODE -ne 0) { throw "Az Inno Setup hibával állt le." }
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: oxigen-windows-${{ steps.ver.outputs.version }}
           path: |
