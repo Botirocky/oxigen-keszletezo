@@ -27,6 +27,16 @@ tehető egy GitHub personal access token – ekkor azzal hitelesít.
 
 from __future__ import annotations
 
+__lazy_modules__ = [
+    "json",
+    "shutil",
+    "subprocess",
+    "tempfile",
+    "urllib.error",
+    "urllib.request",
+    "zipfile",
+]
+
 import json
 import os
 import re

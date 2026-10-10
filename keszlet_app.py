@@ -26,6 +26,12 @@ Függőség: openpyxl  (az inditas.bat ezt automatikusan telepíti)
 
 from __future__ import annotations
 
+__lazy_modules__ = [
+    "hashlib",
+    "json",
+    "shutil",
+]
+
 import hashlib
 import json
 import os
