@@ -52,7 +52,7 @@ from datetime import datetime
 from pathlib import Path
 
 # A program verziója. EZ az egyetlen hiteles hely – a kiadas.sh is ezt írja át.
-APP_VERSION = "1.1.3"
+APP_VERSION = "1.1.4"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
